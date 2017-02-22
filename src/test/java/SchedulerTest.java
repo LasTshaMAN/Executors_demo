@@ -1,15 +1,23 @@
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 
 public class SchedulerTest {
+
+    private static final int DELTA_IN_NANO_SECONDS = 100000000;
+
+    @Rule
+    public Timeout timeout = new Timeout(5, TimeUnit.SECONDS);
 
     private AtomicInteger amountOfFinishedTasks;
     private List<String> actualFinishingOrder;
@@ -20,12 +28,11 @@ public class SchedulerTest {
         this.actualFinishingOrder = Collections.synchronizedList(new ArrayList<>());
     }
 
-    @Test(timeout=5000)
+    @Test
     public void shouldScheduleTasksForExecutionInProperOrder() throws Exception {
-        int deltaInNanoSeconds = 100000000;
-        LocalDateTime firstTaskStartTime = LocalDateTime.now().plusNanos(deltaInNanoSeconds);
-        LocalDateTime secondTaskStartTime = firstTaskStartTime.plusNanos(deltaInNanoSeconds);
-        LocalDateTime thirdTaskStartTime = secondTaskStartTime.plusNanos(deltaInNanoSeconds);
+        LocalDateTime firstTaskStartTime = LocalDateTime.now().plusNanos(DELTA_IN_NANO_SECONDS);
+        LocalDateTime secondTaskStartTime = firstTaskStartTime.plusNanos(DELTA_IN_NANO_SECONDS);
+        LocalDateTime thirdTaskStartTime = secondTaskStartTime.plusNanos(DELTA_IN_NANO_SECONDS);
 
         Scheduler<Void> scheduler = new Scheduler<>();
 
@@ -54,11 +61,10 @@ public class SchedulerTest {
         assertEquals(expectedFinishingOrder, actualFinishingOrder);
     }
 
-    @Test(timeout=5000)
+    @Test
     public void shouldExecuteTasksFromPastImmediately() throws Exception {
-        int deltaInNanoSeconds = 100000000;
-        LocalDateTime pastTime = LocalDateTime.now().plusNanos(deltaInNanoSeconds);
-        LocalDateTime futureTime = pastTime.plusNanos(2 * deltaInNanoSeconds);
+        LocalDateTime pastTime = LocalDateTime.now().plusNanos(DELTA_IN_NANO_SECONDS);
+        LocalDateTime futureTime = pastTime.plusNanos(2 * DELTA_IN_NANO_SECONDS);
 
         Scheduler<Void> scheduler = new Scheduler<>();
 
@@ -81,10 +87,9 @@ public class SchedulerTest {
         assertEquals(expectedFinishingOrder, actualFinishingOrder);
     }
 
-    @Test(timeout=5000)
+    @Test
     public void shouldExecuteTasksInSubmissionOrderIfTheyAreScheduledToSameTime() throws Exception {
-        int deltaInNanoSeconds = 100000000;
-        LocalDateTime sameTime = LocalDateTime.now().plusNanos(deltaInNanoSeconds);
+        LocalDateTime sameTime = LocalDateTime.now().plusNanos(DELTA_IN_NANO_SECONDS);
 
         Scheduler<Void> scheduler = new Scheduler<>();
 
