@@ -14,8 +14,8 @@ class Scheduler<TaskOutputType> {
         this.executor = new ScheduledThreadPoolExecutor(1);
     }
 
-    void scheduleTask(LocalDateTime executeAtThisTime, Callable<TaskOutputType> task) {
+    Future<TaskOutputType> scheduleTask(LocalDateTime executeAtThisTime, Callable<TaskOutputType> task) {
         int delayInNanoSeconds = executeAtThisTime.minusNanos(LocalDateTime.now().getNano()).getNano();
-        executor.schedule(task, delayInNanoSeconds, TimeUnit.NANOSECONDS);
+        return executor.schedule(task, delayInNanoSeconds, TimeUnit.NANOSECONDS);
     }
 }

@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,11 +22,25 @@ public class SchedulerTest {
 
     private AtomicInteger amountOfFinishedTasks;
     private List<String> actualFinishingOrder;
+    private Scheduler<String> scheduler;
 
     @Before
     public void setUp() throws Exception {
         this.amountOfFinishedTasks = new AtomicInteger(0);
         this.actualFinishingOrder = Collections.synchronizedList(new ArrayList<>());
+        this.scheduler = new Scheduler<>();
+    }
+
+    @Test
+    public void shouldReturnFutureCorrespondingToSentTask() throws Exception {
+        String messageToReturn = "This message should be returned";
+
+        Future<String> futureForMessage = scheduler.scheduleTask(
+                LocalDateTime.now(),
+                () -> messageToReturn
+        );
+
+        assertEquals(futureForMessage.get(), messageToReturn);
     }
 
     @Test
@@ -33,8 +48,6 @@ public class SchedulerTest {
         LocalDateTime firstTaskStartTime = LocalDateTime.now().plusNanos(DELTA_IN_NANO_SECONDS);
         LocalDateTime secondTaskStartTime = firstTaskStartTime.plusNanos(DELTA_IN_NANO_SECONDS);
         LocalDateTime thirdTaskStartTime = secondTaskStartTime.plusNanos(DELTA_IN_NANO_SECONDS);
-
-        Scheduler<Void> scheduler = new Scheduler<>();
 
         scheduler.scheduleTask(thirdTaskStartTime, () -> {
             actualFinishingOrder.add("thirdTask");
@@ -66,8 +79,6 @@ public class SchedulerTest {
         LocalDateTime pastTime = LocalDateTime.now().plusNanos(DELTA_IN_NANO_SECONDS);
         LocalDateTime futureTime = pastTime.plusNanos(2 * DELTA_IN_NANO_SECONDS);
 
-        Scheduler<Void> scheduler = new Scheduler<>();
-
         scheduler.scheduleTask(futureTime, () -> {
             actualFinishingOrder.add("futureTask");
             amountOfFinishedTasks.incrementAndGet();
@@ -90,8 +101,6 @@ public class SchedulerTest {
     @Test
     public void shouldExecuteTasksInSubmissionOrderIfTheyAreScheduledToSameTime() throws Exception {
         LocalDateTime sameTime = LocalDateTime.now().plusNanos(DELTA_IN_NANO_SECONDS);
-
-        Scheduler<Void> scheduler = new Scheduler<>();
 
         scheduler.scheduleTask(sameTime, () -> {
             actualFinishingOrder.add("firstTask");
